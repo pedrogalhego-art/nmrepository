@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: boletim-diario-estaleiro
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /login
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_BASE_URL
+        sync: false
+      - key: AI_MODEL
+        value: free-first
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PROJETO_PASSWORD
+        sync: false

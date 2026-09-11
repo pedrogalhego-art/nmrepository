@@ -1,0 +1,493 @@
+{
+  "Chapas": [
+    {
+      "code": "(02000001.03)",
+      "name": "Chapa Aço Carbono #14",
+      "weight_6m": 15.3
+    },
+    {
+      "code": "(02000001.02)",
+      "name": "Chapa Aço Carbono #16",
+      "weight_6m": 12.2
+    },
+    {
+      "code": "(02000001.01)",
+      "name": "Chapa Aço Carbono #18",
+      "weight_6m": 9.68
+    },
+    {
+      "code": "(02000001.08)",
+      "name": "Chapa Aço Carbono#20",
+      "weight_6m": 7.07
+    },
+    {
+      "code": "(02000001.04)",
+      "name": "Chapa Aço Carbono #1/8",
+      "weight_6m": 25.0
+    },
+    {
+      "code": "(02000001.FL).",
+      "name": "Chapa Aço Carbono#1/4",
+      "weight_6m": 49.8
+    },
+    {
+      "code": "(02000001.05)",
+      "name": "Chapa Aço Carbono #3/16",
+      "weight_6m": 37.3
+    },
+    {
+      "code": "(02000001.FL)",
+      "name": "Chapa Aço Carbono #5/16",
+      "weight_6m": 62.3
+    },
+    {
+      "code": "(02000001.FL)",
+      "name": "Chapa Aço Carbono #3/8",
+      "weight_6m": 74.8
+    },
+    {
+      "code": "(02000001.06)",
+      "name": "Chapa Aço Carbono #1/2",
+      "weight_6m": 99.6
+    },
+    {
+      "code": "(02000001.FL)",
+      "name": "Chapa Aço Carbono #5/8",
+      "weight_6m": 124.5
+    }
+  ],
+  "Metalon": [
+    {
+      "code": "02100001-01",
+      "name": "Metalon 100 x 100 #14 - 6mts",
+      "weight_6m": 37.01
+    },
+    {
+      "code": "02100001-04",
+      "name": "Metalon 20 X 20 #18 - 6mts",
+      "weight_6m": 4.3
+    },
+    {
+      "code": "02100001-06",
+      "name": "Metalon 50 x 50 #1/8\" - 6mts",
+      "weight_6m": 28.34
+    },
+    {
+      "code": "02100001-05",
+      "name": "Metalon 50 x 50 #14 - 6mts",
+      "weight_6m": 18.21
+    },
+    {
+      "code": "02100001-03",
+      "name": "Metalon 50 x 50 #18 - 6mts",
+      "weight_6m": 11.07
+    },
+    {
+      "code": "02100001-02",
+      "name": "Metalon 80 x 80 #14 - 6mts",
+      "weight_6m": 29.48
+    },
+    {
+      "code": "02100001-07",
+      "name": "Metalon 80 x 80 #16 - 6mts",
+      "weight_6m": 22.22
+    }
+  ],
+  "Cantoneiras": [
+    {
+      "code": "02300001-07",
+      "name": "Ferro Cantoneira 1/4\" X 1.1/2\" - 6MTS",
+      "weight_6m": 20.88
+    },
+    {
+      "code": "02300001-08",
+      "name": "Ferro Cantoneira 1/4\" X 2\" - 6MTS",
+      "weight_6m": 28.5
+    },
+    {
+      "code": "02300001-09",
+      "name": "Ferro Cantoneira 1/4\" X 2.1/2\" - 6MTS",
+      "weight_6m": 36.6
+    },
+    {
+      "code": "02300001-10",
+      "name": "Ferro Cantoneira 1/4\" X 4\" - 6MTS",
+      "weight_6m": 58.86
+    },
+    {
+      "code": "02300001-03",
+      "name": "Ferro Cantoneira 1/8\" X 1\" - 6MTS",
+      "weight_6m": 7.14
+    },
+    {
+      "code": "02300001-12",
+      "name": "Ferro Cantoneira 1/8\" X 1.1/2\" - 6MTS",
+      "weight_6m": 10.98
+    },
+    {
+      "code": "02300001-04",
+      "name": "Ferro Cantoneira 1/8\" X 1.1/4\" - 6MTS",
+      "weight_6m": 9.0
+    },
+    {
+      "code": "02300001-14",
+      "name": "Ferro Cantoneira 1/8\" X 2\" - 6MTS",
+      "weight_6m": 14.76
+    },
+    {
+      "code": "02300001-01",
+      "name": "Ferro Cantoneira 1/8\" X 3/4\" - 6MTS",
+      "weight_6m": 5.28
+    },
+    {
+      "code": "02300001-02",
+      "name": "Ferro Cantoneira 1/8\" X 7/8\" - 6MTS",
+      "weight_6m": 6.24
+    },
+    {
+      "code": "02300001-13",
+      "name": "Ferro Cantoneira 3/16\" X 1.1/4\" - 6MTS",
+      "weight_6m": 13.2
+    },
+    {
+      "code": "02300001-05",
+      "name": "Ferro Cantoneira 3/16\" X 1.1/2\" - 6MTS",
+      "weight_6m": 16.08
+    },
+    {
+      "code": "02300001-06",
+      "name": "Ferro Cantoneira 3/16\" X 2\" - 6MTS",
+      "weight_6m": 21.78
+    },
+    {
+      "code": "02300001-11",
+      "name": "Ferro Cantoneira 3/16\" X 3\" - 6MTS",
+      "weight_6m": 33.0
+    }
+  ],
+  "Ferro Chato": [
+    {
+      "code": "02200001-10",
+      "name": "FERRO CHATO 1/4\" X 1\" - 6MTS",
+      "weight_6m": 7.6
+    },
+    {
+      "code": "02200001-12",
+      "name": "FERRO CHATO 1/4\" X 2\" - 6MTS",
+      "weight_6m": 15.19
+    },
+    {
+      "code": "02200001-04",
+      "name": "FERRO CHATO 1/8\" X 1.1/4\" - 6MTS",
+      "weight_6m": 4.75
+    },
+    {
+      "code": "02200001-03",
+      "name": "FERRO CHATO 1/8\" X 1\" - 6MTS",
+      "weight_6m": 3.8
+    },
+    {
+      "code": "02200001-18",
+      "name": "FERRO CHATO 1/8\" X 1.1/2\" - 6MTS",
+      "weight_6m": 5.7
+    },
+    {
+      "code": "02200001-01",
+      "name": "FERRO CHATO 1/8\" X 1/2\" - 6MTS",
+      "weight_6m": 1.9
+    },
+    {
+      "code": "02200001-05",
+      "name": "FERRO CHATO 1/8\" X 2\" - 6MTS",
+      "weight_6m": 7.6
+    },
+    {
+      "code": "02200001-02",
+      "name": "FERRO CHATO 1/8\" X 3/4\" - 6MTS",
+      "weight_6m": 2.85
+    },
+    {
+      "code": "02200001-06",
+      "name": "FERRO CHATO 3/16\" X 1\" - 6MTS",
+      "weight_6m": 5.7
+    },
+    {
+      "code": "02200001-09",
+      "name": "FERRO CHATO 3/16\" X 1.1/2\" - 6MTS",
+      "weight_6m": 8.55
+    },
+    {
+      "code": "02200001-08",
+      "name": "FERRO CHATO 3/16\" X 1.1/4\" - 6MTS",
+      "weight_6m": 7.12
+    },
+    {
+      "code": "02200001-07",
+      "name": "FERRO CHATO 3/16\" X 2\" - 6MTS",
+      "weight_6m": 11.4
+    },
+    {
+      "code": "02200001-13",
+      "name": "FERRO CHATO 3/8\" X 1\" - 6MTS",
+      "weight_6m": 11.4
+    },
+    {
+      "code": "02200001-14",
+      "name": "FERRO CHATO 3/8\" X 2\" - 6MTS",
+      "weight_6m": 22.79
+    },
+    {
+      "code": "02200001-15",
+      "name": "FERRO CHATO 3/8\" X 2.1/2\" - 6MTS",
+      "weight_6m": 28.49
+    },
+    {
+      "code": "02200001-16",
+      "name": "FERRO CHATO 3/8\" X 3\" - 6MTS",
+      "weight_6m": 34.19
+    },
+    {
+      "code": "02200001-17",
+      "name": "FERRO CHATO 3/8\" X 4\" - 6MTS",
+      "weight_6m": 45.58
+    }
+  ],
+  "Trefilados": [
+    {
+      "code": "02500003-01",
+      "name": "TREFILADO QUADRADO ACO CARBONO 3/4\"",
+      "weight_6m": 17.09
+    },
+    {
+      "code": "02500003-02",
+      "name": "TREFILADO QUADRADO ACO CARBONO 5/8\"",
+      "weight_6m": 11.87
+    },
+    {
+      "code": "02500001-16",
+      "name": "TREFILADO REDONDO ACO CARBONO 1020 Ø1.1/4\"",
+      "weight_6m": 37.29
+    },
+    {
+      "code": "02500001-14",
+      "name": "TREFILADO REDONDO ACO CARBONO 1020 Ø1/2\"",
+      "weight_6m": 5.97
+    },
+    {
+      "code": "02500001-15",
+      "name": "TREFILADO REDONDO ACO CARBONO 1020 Ø3/8\"",
+      "weight_6m": 3.36
+    },
+    {
+      "code": "02500001-13",
+      "name": "TREFILADO REDONDO ACO CARBONO 1020 Ø5/8\"",
+      "weight_6m": 9.32
+    },
+    {
+      "code": "02500001-12",
+      "name": "TREFILADO REDONDO ACO CARBONO 1020 Ø7/8\"",
+      "weight_6m": 18.27
+    },
+    {
+      "code": "02500001-05",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø1\"",
+      "weight_6m": 23.87
+    },
+    {
+      "code": "02500001-06",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø1.1/2\"",
+      "weight_6m": 53.7
+    },
+    {
+      "code": "02500001-17",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø1.1/4\"",
+      "weight_6m": 37.29
+    },
+    {
+      "code": "02500001-07",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø1.3/4\"",
+      "weight_6m": 73.09
+    },
+    {
+      "code": "02500001-18",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø1.3/8\"",
+      "weight_6m": 45.12
+    },
+    {
+      "code": "02500001-02",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø1/2\"",
+      "weight_6m": 5.97
+    },
+    {
+      "code": "02500001-08",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø2\"",
+      "weight_6m": 95.46
+    },
+    {
+      "code": "02500001-09",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø2.1/2\"",
+      "weight_6m": 149.16
+    },
+    {
+      "code": "02500001-10",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø3\"",
+      "weight_6m": 214.79
+    },
+    {
+      "code": "02500001-01",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø3/8\"",
+      "weight_6m": 3.36
+    },
+    {
+      "code": "02500001-11",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø4\"",
+      "weight_6m": 381.85
+    },
+    {
+      "code": "02500001-03",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø5/8\"",
+      "weight_6m": 9.32
+    },
+    {
+      "code": "02500001-04",
+      "name": "TREFILADO REDONDO ACO CARBONO 1045 Ø7/8\"",
+      "weight_6m": 18.27
+    },
+    {
+      "code": "02500002-04",
+      "name": "TREFILADO REDONDO ACO INOX 304 1.1/2\"",
+      "weight_6m": 54.72
+    },
+    {
+      "code": "02500002-01",
+      "name": "TREFILADO REDONDO ACO INOX 304 Ø1\"",
+      "weight_6m": 24.32
+    },
+    {
+      "code": "02500002-02",
+      "name": "TREFILADO REDONDO ACO INOX 304 Ø1.1/4\"",
+      "weight_6m": 38.0
+    },
+    {
+      "code": "02500002-03",
+      "name": "TREFILADO REDONDO ACO INOX 304 Ø1.3/8\"",
+      "weight_6m": 45.98
+    },
+    {
+      "code": "02500004-02",
+      "name": "TREFILADO REDONDO MECANICO 3/4\"",
+      "weight_6m": 13.42
+    },
+    {
+      "code": "02500004-01",
+      "name": "TREFILADO REDONDO MECANICO 5/8\"",
+      "weight_6m": 9.32
+    }
+  ],
+  "Tubos Redondos": [
+    {
+      "code": "02100003-10",
+      "name": "TUBO IND RED Ø1.1/2\" X #18 - 6MTS",
+      "weight_6m": 6.55
+    },
+    {
+      "code": "02100003-02",
+      "name": "TUBO IND RED Ø1.1/4\" X #14 - 6MTS",
+      "weight_6m": 8.39
+    },
+    {
+      "code": "02100003-01",
+      "name": "TUBO IND RED Ø1.1/4\" X #18 - 6MTS",
+      "weight_6m": 5.42
+    },
+    {
+      "code": "02100003-11",
+      "name": "TUBO IND RED Ø2\" X #1/8 - 6MTS",
+      "weight_6m": 22.37
+    },
+    {
+      "code": "02100003-04",
+      "name": "TUBO IND RED Ø2\" X #14 - 6MTS",
+      "weight_6m": 13.75
+    },
+    {
+      "code": "02100003-03",
+      "name": "TUBO IND RED Ø2\" X #18 - 6MTS",
+      "weight_6m": 8.81
+    },
+    {
+      "code": "02100003-05",
+      "name": "TUBO IND RED Ø3\" X #14 - 6MTS",
+      "weight_6m": 20.89
+    },
+    {
+      "code": "02100003-06",
+      "name": "TUBO IND RED Ø4\" X #14 - 6MTS",
+      "weight_6m": 28.03
+    },
+    {
+      "code": "02100003-09",
+      "name": "TUBO IND RED Ø5\" X #13 - 6MTS",
+      "weight_6m": 41.53
+    },
+    {
+      "code": "02100003-07",
+      "name": "TUBO IND RED Ø5\" X #14 - 6MTS",
+      "weight_6m": 35.17
+    },
+    {
+      "code": "02100003-08",
+      "name": "TUBO IND RED Ø8\" X #1/8 - 6MTS",
+      "weight_6m": 93.97
+    }
+  ],
+  "Tubos SCH": [
+    {
+      "code": "02100004-01",
+      "name": "TUBO SCH40 Ø1\"",
+      "weight_6m": 20.28
+    },
+    {
+      "code": "02100004-02",
+      "name": "TUBO SCH40 Ø1.1/2\"",
+      "weight_6m": 30.18
+    },
+    {
+      "code": "02100004-03",
+      "name": "TUBO SCH40 Ø2\"",
+      "weight_6m": 37.68
+    },
+    {
+      "code": "02100006-01",
+      "name": "TUBO SCH80 Ø1.1/2\"",
+      "weight_6m": 45.96
+    }
+  ],
+  "Vigas": [
+    {
+      "code": "02400002-01",
+      "name": "VIGA I 3\" - 1ª ALMA",
+      "weight_6m": 51.6
+    },
+    {
+      "code": "02400002-02",
+      "name": "VIGA I 4\" - 1ª ALMA",
+      "weight_6m": 70.3
+    },
+    {
+      "code": "02400001-01",
+      "name": "VIGA U 3\" - 1ª ALMA",
+      "weight_6m": 37.5
+    },
+    {
+      "code": "02400001-02",
+      "name": "VIGA U 4\" - 1ª ALMA",
+      "weight_6m": 50.4
+    },
+    {
+      "code": "02400001-03",
+      "name": "VIGA U 6\" - 1ª ALMA",
+      "weight_6m": 77.3
+    }
+  ]
+}

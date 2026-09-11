@@ -1,0 +1,19 @@
+# Dependências
+node_modules/
+
+# Config / segredos
+.env
+.env.local
+
+# Banco de dados local
+*.db
+*.db-shm
+*.db-wal
+ai_usage.json
+
+# Sistema / logs
+.DS_Store
+npm-debug.log*
+*.log
+check-ai.ts
+adm.txt
