@@ -9,6 +9,7 @@ const {Server}=require("socket.io");
 const fs=require("fs");
 
 const app=express();
+app.set("trust proxy", 1); // Render: HTTPS termina no proxy — necessário p/ cookie Secure da sessão funcionar
 const server=http.createServer(app);
 const io=new Server(server);
 const db=new Database(process.env.DB_FILE||"estoque.db");
