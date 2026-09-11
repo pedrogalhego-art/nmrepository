@@ -6,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -145,42 +146,66 @@
   </section>
 
   <section id="tab-explicacao" class="hidden">
-    <div class="panel rules-panel">
-      <div class="panel-head"><div><h2>Explicação do Sistema</h2><p class="muted">Visão completa de cabo a rabo — Versão 1.0.1</p></div><span class="badge-static">VERSÃO 1.0.1</span></div>
-      <div class="rules-body">
-        <h3>O que é</h3>
-        <p>O <strong>Boletim Diário - Estaleiro</strong> é um sistema web de controle de estoque de materiais (chapas, barras, tubos, cantoneiras, metalon e outros) com atualização em tempo real para todos os usuários conectados.</p>
+    <div class="explicacao-grid">
+      <div class="panel rules-panel explicacao-left">
+        <div class="panel-head"><div><h2>Explicação do Sistema</h2><p class="muted">Visão completa de cabo a rabo</p></div><span class="badge-static">VERSÃO 1.0.1</span></div>
+        <div class="rules-body">
+          <h3>O que é</h3>
+          <p>O <strong>Boletim Diário - Estaleiro</strong> é um sistema web de controle de estoque de materiais (chapas, barras, tubos, cantoneiras, metalon e outros) com atualização em tempo real para todos os usuários conectados.</p>
 
-        <h3>Como funciona (de cabo a rabo)</h3>
-        <ul>
-          <li><strong>Login:</strong> cada usuário acessa com usuário e senha. Existem dois perfis: <em>Administrador</em> (pode abastecer e dar baixa) e <em>Projeto</em> (visualização somente leitura).</li>
-          <li><strong>Estoque:</strong> a tabela mostra categoria, código, descrição, peso por barra, estoque atual e peso total. A busca e o filtro por categoria ajudam a localizar materiais.</li>
-          <li><strong>Movimentações:</strong> abastecimentos (entradas) e baixas (saídas) são registrados com usuário, data, quantidade e observação. Tudo aparece no histórico e dispara sons de notificação.</li>
-          <li><strong>Tempo real:</strong> via Socket.IO, toda alteração de estoque aparece instantaneamente para todos os conectados, inclusive no ticker do topo.</li>
-          <li><strong>Ticker:</strong> a faixa no topo mostra as últimas entradas e saídas ("ENTROU +X" e "BAIXA −X").</li>
-          <li><strong>Valores:</strong> a aba de cotações simula uma bolsa de valores com preços de materiais (chapa, alumínio, milho etc), variando em tempo real.</li>
-          <li><strong>Hermes - Agent:</strong> assistente de IA gratuito (até 30 mil tokens por dia) que responde perguntas sobre o estoque e gera a planilha do dia.</li>
-          <li><strong>Compras (Kanban):</strong> painel para acompanhar compras de materiais em etapas: Solicitado, Aprovado, Comprado, Entregue ou Cancelado.</li>
-          <li><strong>Regras:</strong> normas para administradores e para quem visualiza o estoque.</li>
-        </ul>
+          <h3>Como funciona (de cabo a rabo)</h3>
+          <ul>
+            <li><strong>Login:</strong> cada usuário acessa com usuário e senha. Existem dois perfis: <em>Administrador</em> (pode abastecer e dar baixa) e <em>Projeto</em> (visualização somente leitura).</li>
+            <li><strong>Estoque:</strong> a tabela mostra categoria, código, descrição, peso por barra, estoque atual e peso total. A busca e o filtro por categoria ajudam a localizar materiais.</li>
+            <li><strong>Movimentações:</strong> abastecimentos (entradas) e baixas (saídas) são registrados com usuário, data, quantidade e observação. Tudo aparece no histórico e dispara sons de notificação.</li>
+            <li><strong>Tempo real:</strong> via Socket.IO, toda alteração de estoque aparece instantaneamente para todos os conectados, inclusive no ticker do topo.</li>
+            <li><strong>Ticker:</strong> a faixa no topo mostra as últimas entradas e saídas ("ENTROU +X" e "BAIXA −X").</li>
+            <li><strong>Valores:</strong> a aba de cotações simula uma bolsa de valores com preços de materiais (chapa, alumínio, milho etc), variando em tempo real.</li>
+            <li><strong>Hermes - Agent:</strong> assistente de IA gratuito (até 30 mil tokens por dia) que responde perguntas sobre o estoque e gera a planilha do dia.</li>
+            <li><strong>Compras (Kanban):</strong> painel para acompanhar compras de materiais em etapas: Solicitado, Aprovado, Comprado, Entregue ou Cancelado.</li>
+            <li><strong>Regras:</strong> normas para administradores e para quem visualiza o estoque.</li>
+          </ul>
 
-        <h3>Tecnologias</h3>
-        <ul>
-          <li>Node.js + Express (servidor)</li>
-          <li>SQLite (banco de dados local, arquivo estoque.db)</li>
-          <li>Socket.IO (tempo real)</li>
-          <li>HTML, CSS e JavaScript puros no frontend</li>
-        </ul>
+          <h3>Tecnologias</h3>
+          <ul>
+            <li>Node.js + Express (servidor)</li>
+            <li>SQLite (banco de dados local, arquivo estoque.db)</li>
+            <li>Socket.IO (tempo real)</li>
+            <li>HTML, CSS e JavaScript puros no frontend</li>
+          </ul>
 
-        <h3>Limites e segurança</h3>
-        <ul>
-          <li>IA limitada a 30.000 tokens por dia (compartilhada entre usuários).</li>
-          <li>Senhas armazenadas com hash (bcrypt).</li>
-          <li>Sessão com cookie httpOnly e expiração de 8 horas.</li>
-        </ul>
+          <h3>Limites e segurança</h3>
+          <ul>
+            <li>IA limitada a 30.000 tokens por dia (compartilhada entre usuários).</li>
+            <li>Senhas armazenadas com hash (bcrypt).</li>
+            <li>Sessão com cookie httpOnly e expiração de 8 horas.</li>
+          </ul>
 
-        <h3>Versão</h3>
-        <p><strong>1.0.1</strong> — inclui kanban de compras, assistente Hermes - Agent, bolsa de valores, tema alternativo, sons de notificação, logo e fundo customizados.</p>
+          <h3>Versão</h3>
+          <p><strong>1.0.1</strong> — inclui kanban de compras, assistente Hermes - Agent, bolsa de valores, tema alternativo, sons de notificação, logo e fundo customizados, planilha Excel para download.</p>
+        </div>
+      </div>
+
+      <div class="explicacao-right">
+        <div class="criador-card">
+          <div class="criador-avatar">PG</div>
+          <h3>Pedro Galhego</h3>
+          <p class="criador-role">Criador do Sistema</p>
+          <div class="criador-divider"></div>
+          <p class="criador-bio">
+            O Pedro criou o <strong>Boletim Diário - Estaleiro</strong> com o objetivo de modernizar e organizar o controle de materiais do estaleiro, substituindo planilhas manuais por um sistema digital em tempo real.
+          </p>
+          <p class="criador-bio">
+            Seu objetivo é facilitar o trabalho da equipe de projetos, garantindo que todos tenham acesso rápido e transparente ao estoque de chapas, barras, tubos e outros materiais — evitando desperdícios, falhas de comunicação e retrabalho.
+          </p>
+          <p class="criador-bio">
+            Com o sistema, o Pedro quer que o estaleiro tenha <strong>visibilidade total</strong> sobre o que entra e sai, reduza perdas e tome decisões de compra com base em dados reais, não em suposições.
+          </p>
+          <div class="criador-links">
+            <span class="criador-version">Versão 1.0.1</span>
+            <span class="criador-date">Setembro 2026</span>
+          </div>
+        </div>
       </div>
     </div>
   </section>

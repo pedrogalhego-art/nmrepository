@@ -554,6 +554,61 @@ tr:hover td { background: #f8fbfa; }
 .rules-body li { margin: 8px 0; font-size: 13.5px; line-height: 1.5; color: #33424e; }
 .rules-body li::marker { color: var(--accent); }
 
+/* ---------- Explicação (layout coluna) ---------- */
+.explicacao-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  max-width: 1200px;
+}
+.explicacao-left { min-width: 0; }
+.explicacao-right { position: sticky; top: 100px; align-self: start; }
+.criador-card {
+  background: var(--dark);
+  color: #fff;
+  border-radius: 14px;
+  padding: 28px 22px;
+  text-align: center;
+}
+.criador-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #147d64);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+.criador-card h3 { margin: 0 0 4px; font-size: 17px; }
+.criador-role { color: rgba(255,255,255,0.55); font-size: 12px; margin: 0; }
+.criador-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 16px 0; }
+.criador-bio { font-size: 13px; line-height: 1.55; color: rgba(255,255,255,0.78); text-align: left; margin: 0 0 10px; }
+.criador-links { display: flex; justify-content: center; gap: 14px; margin-top: 16px; }
+.criador-version, .criador-date {
+  font-size: 11px; font-weight: 700; color: var(--accent-soft);
+  background: var(--accent); padding: 4px 10px; border-radius: 8px;
+}
+.criador-version { background: rgba(111,199,154,0.15); color: #6fc79a; }
+
+/* ---------- Emojis Apple (Noto Color Emoji) ---------- */
+body, .ai-msg, .rules-body, .kanban-card, .criador-card, .panel, button, td, li, p, span, div {
+  font-family: 'Inter', 'Noto Color Emoji', system-ui, -apple-system, sans-serif;
+}
+
+/* ---------- Chat horários ---------- */
+.ai-msg-time {
+  display: block;
+  font-size: 10px;
+  color: rgba(255,255,255,0.45);
+  margin-top: 4px;
+  text-align: right;
+}
+.ai-msg.bot .ai-msg-time { color: rgba(0,0,0,0.28); text-align: left; }
+
 /* ---------- Footer ---------- */
 .footer {
   margin-top: 42px;

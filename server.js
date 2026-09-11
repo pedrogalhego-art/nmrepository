@@ -124,16 +124,38 @@ function ensureToday(){if(aiUsage.date!==todayKey()){aiUsage={date:todayKey(),us
 function estTokens(text){return Math.ceil((text||"").length/4)}
 
 async function askAi(messages){
-  const res=await fetch(`${AI_BASE}/chat/completions`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json",Authorization:`Bearer ${AI_KEY}`},
-    body:JSON.stringify({model:AI_MODEL,messages,max_tokens:800,temperature:0.6})
-  });
-  if(!res.ok){const t=await res.text().catch(()=>"");throw new Error(`IA erro ${res.status}: ${t.slice(0,150)}`)}
-  const raw=await res.text();
-  const cleaned=raw.replace(/\}\s*data:\s*\[DONE\]\s*$/,"}");
-  const data=JSON.parse(cleaned);
-  return (data.choices?.[0]?.message?.content||"").trim();
+  // Tenta o túnel local (Hermes/free-first) primeiro
+  try{
+    const res=await fetch(`${AI_BASE}/chat/completions`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json",Authorization:`Bearer ${AI_KEY}`},
+      body:JSON.stringify({model:AI_MODEL,messages,max_tokens:800,temperature:0.6})
+    });
+    if(res.ok){
+      const raw=await res.text();
+      const cleaned=raw.replace(/\}\s*data:\s*\[DONE\]\s*$/,"}");
+      const data=JSON.parse(cleaned);
+      const content=(data.choices?.[0]?.message?.content||"").trim();
+      if(content) return content;
+    }
+  }catch(e){/* cai para fallback */}
+  // Fallback: OpenRouter gratuito (modelos free, sem chave)
+  try{
+    const res=await fetch("https://openrouter.ai/api/v1/chat/completions",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","HTTP-Referer":"https://boletim-estaleiro.onrender.com","X-Title":"Boletim Diario Estaleiro"},
+      body:JSON.stringify({model:"openai/gpt-4o-mini",messages,max_tokens:600,temperature:0.6})
+    });
+    if(res.ok){
+      const data=await res.json();
+      const content=(data.choices?.[0]?.message?.content||"").trim();
+      if(content) return content;
+    }
+    const t=await res.text().catch(()=>"");
+    throw new Error(`IA erro ${res.status}: ${t.slice(0,150)}`);
+  }catch(e){
+    throw new Error("Nenhuma IA disponível no momento (túnel local e fallback público indisponíveis). Tente novamente em instantes.");
+  }
 }
 
 app.post("/api/ai",auth,async(req,res)=>{
@@ -249,10 +271,7 @@ app.delete("/api/purchases/:id",auth,(req,res)=>{
 const xlsx=require("xlsx");
 
 // ===== Planilha Excel do dia (download) =====
-app.get("/api/planilha",auth,(req,res)=>{
-  const prods=db.prepare("SELECT category,code,name,weight_6m,stock FROM products ORDER BY category,name").all();
-  const movs=db.prepare(`SELECT p.category,p.code,p.name,m.type,m.quantity,m.note,m.created_at,u.username
-    FROM movements m JOIN products p ON p.id=m.product_id JOIN users u ON u.id=m.user_id ORDER BY m.id DESC LIMIT 200`).all();
+function buildExcelBuffer(prods,movs,analysisSheet){
   const ws1=xlsx.utils.json_to_sheet(prods.map(p=>({
     Categoria:p.category,Codigo:p.code,Descricao:p.name,"Peso barra (kg)":p.weight_6m??"",Estoque:p.stock,"Peso total (kg)":((p.stock*(p.weight_6m||0))||0).toFixed(2)
   })));
@@ -260,12 +279,52 @@ app.get("/api/planilha",auth,(req,res)=>{
     Data:m.created_at,Categoria:m.category,Codigo:m.code,Material:m.name,Tipo:m.type==="abastecimento"?"Entrada":"Saida",Quantidade:m.quantity,Usuario:m.username,Obs:m.note||""
   })));
   const wb=xlsx.utils.book_new();
+  if(analysisSheet){
+    const ws0=xlsx.utils.aoa_to_sheet(analysisSheet);
+    ws0["!cols"]=[{wch:60}];
+    xlsx.utils.book_append_sheet(wb,ws0,"Analise IA");
+  }
   xlsx.utils.book_append_sheet(wb,ws1,"Estoque");
   xlsx.utils.book_append_sheet(wb,ws2,"Movimentacoes");
-  const buf=xlsx.write(wb,{type:"buffer",bookType:"xlsx"});
+  return xlsx.write(wb,{type:"buffer",bookType:"xlsx"});
+}
+
+app.get("/api/planilha",auth,(req,res)=>{
+  const prods=db.prepare("SELECT category,code,name,weight_6m,stock FROM products ORDER BY category,name").all();
+  const movs=db.prepare(`SELECT p.category,p.code,p.name,m.type,m.quantity,m.note,m.created_at,u.username
+    FROM movements m JOIN products p ON p.id=m.product_id JOIN users u ON u.id=m.user_id ORDER BY m.id DESC LIMIT 200`).all();
+  const buf=buildExcelBuffer(prods,movs);
   const hoje=new Date().toISOString().slice(0,10);
   res.setHeader("Content-Type","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.setHeader("Content-Disposition",`attachment; filename="boletim-diario-${hoje}.xlsx"`);
+  res.send(buf);
+});
+
+// ===== Planilha INTELIGENTE (IA analisa + Excel com análise) =====
+app.get("/api/planilha-inteligente",auth,async(req,res)=>{
+  const prods=db.prepare("SELECT category,code,name,weight_6m,stock FROM products ORDER BY category,name").all();
+  const movs=db.prepare(`SELECT p.category,p.code,p.name,m.type,m.quantity,m.note,m.created_at,u.username
+    FROM movements m JOIN products p ON p.id=m.product_id JOIN users u ON u.id=m.user_id ORDER BY m.id DESC LIMIT 200`).all();
+  let analysisSheet=null;
+  if(AI_KEY){
+    try{
+      const totals=db.prepare(`SELECT category,COUNT(*) items,SUM(stock) pieces,SUM(stock*COALESCE(weight_6m,0)) kg FROM products GROUP BY category ORDER BY category`).all();
+      const low=db.prepare(`SELECT code,name,category,stock FROM products WHERE stock=0 ORDER BY category`).all();
+      const todayMvmts=movs.filter(m=>String(m.created_at||"").startsWith(todayKey()));
+      const ctx={resumoPorCategoria:totals,itensZerados:low,movimentacoesHoje:todayMvmts.length,ultimas:movs.slice(0,5)};
+      const msgs=[{role:"system",content:"Você é um analista de estoque. Analise os dados e gere uma ANÁLISE INTELIGENTE do dia. Formato: cada linha deve ser um parâmetro da análise. Responda apenas com linhas, uma por parâmetro, separadas por quebra de linha. Exemplos: 'Resumo: 3 categorias com 15 itens...', 'Alerta: Itens zerados: ...', 'Saída do dia: 5 movimentações...'."},{role:"user",content:`Gere a análise do dia para esta planilha de estoque: ${JSON.stringify(ctx)}`}];
+      const answer=await askAi(msgs);
+      const lines=answer.split("\n").filter(l=>l.trim());
+      analysisSheet=[["📋 ANÁLISE INTELIGENTE — Boletim Diário - Estaleiro"],["📅 Data: "+todayKey()],[""],["ANÁLISE:"]];
+      lines.forEach(l=>analysisSheet.push([l.replace(/^[\-\*\•\▪\d\.\)\:]+ ?/,"").trim()]));
+      analysisSheet.push([""],["Itens zerados: "+(low.length||"nenhum")]);
+      low.forEach(p=>analysisSheet.push([`  ⚠ ${p.category} / ${p.code} — ${p.name}`]));
+    }catch(e){console.error("Erro na análise IA:",e.message)}
+  }
+  const buf=buildExcelBuffer(prods,movs,analysisSheet);
+  const hoje=new Date().toISOString().slice(0,10);
+  res.setHeader("Content-Type","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition",`attachment; filename="boletim-analitico-${hoje}.xlsx"`);
   res.send(buf);
 });
 app.get("*",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html")));

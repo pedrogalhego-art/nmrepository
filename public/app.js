@@ -119,10 +119,18 @@ renderBolsa();
 
 // ---------- IA (assistente de estoque) ----------
 const aiChat=$("#aiChat");
+function fmtTime(){
+  const d=new Date();
+  return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"})+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
 function aiAdd(role,text){
   const d=document.createElement("div");
   d.className="ai-msg "+role;
   d.textContent=text;
+  const t=document.createElement("span");
+  t.className="ai-msg-time";
+  t.textContent=fmtTime();
+  d.appendChild(t);
   aiChat.appendChild(d);
   aiChat.scrollTop=aiChat.scrollHeight;
   return d;
@@ -149,17 +157,19 @@ async function aiAsk(text,isSheet){
   }finally{aiDone()}
 }
 $("#aiSheet").onclick=()=>{
-  // Baixa a planilha Excel (.xlsx) com os dados reais
-  aiAdd("user","📋 Planilha do dia (Excel)");
-  aiAdd("bot","Gerando arquivo Excel...");
-  fetch("/api/planilha",{headers:{"Content-Type":"application/json"}})
+  // Baixa a planilha Excel INTELIGENTE (.xlsx) com dados reais + análise da IA
+  aiAdd("user","📋 Planilha inteligente do dia (Excel com análise)");
+  aiAdd("bot","Gerando planilha inteligente com análise da IA...");
+  fetch("/api/planilha-inteligente")
     .then(r=>{if(!r.ok)throw new Error("Falha ao gerar");return r.blob()})
     .then(blob=>{
       const url=URL.createObjectURL(blob);
       const a=document.createElement("a");
-      a.href=url;a.download="boletim-diario-"+new Date().toISOString().slice(0,10)+".xlsx";
+      a.href=url;a.download="boletim-analitico-"+new Date().toISOString().slice(0,10)+".xlsx";
       document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
-      aiChat.lastChild.textContent="Planilha Excel baixada! Verifique sua pasta de downloads.";
+      aiChat.lastChild.textContent="Planilha inteligente baixada! Verifique sua pasta de downloads.";
+      const t=document.createElement("span");t.className="ai-msg-time";t.textContent=fmtTime();
+      aiChat.lastChild.appendChild(t);
     })
     .catch(e=>{const d=aiAdd("bot error","Erro ao baixar planilha: "+e.message);setTimeout(()=>d.remove(),8000)});
 };
