@@ -3,6 +3,7 @@ const express=require("express");
 const http=require("http");
 const path=require("path");
 const session=require("express-session");
+const SqliteStore=require("better-sqlite3-session-store")(session);
 const bcrypt=require("bcryptjs");
 const Database=require("better-sqlite3");
 const {Server}=require("socket.io");
@@ -69,6 +70,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(session({
  secret:process.env.SESSION_SECRET||"troque-esta-chave",
+ store:new SqliteStore({client:db,expired:{clear:true,intervalMs:900000}}),
  resave:false,saveUninitialized:false,
  cookie:{httpOnly:true,sameSite:"lax",secure:process.env.NODE_ENV==="production",maxAge:8*60*60*1000}
 }));
