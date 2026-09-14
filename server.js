@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS purchases(
  );
  `);
  // Seed equipes padrão
- const defaultTeams=[{name:'Produção',icon:'🏭'},{name:'Expedição',icon:'📦'},{name:'Compras',icon:'🛒'},{name:'Almoxarifado',icon:'🔧'},{name:'Administração',icon:'📋'},{name:'Manutenção',icon:'🛠️'}];
+ const defaultTeams=[{name:'Produção',icon:'🏭'},{name:'Expedição',icon:'📦'},{name:'Compras',icon:'🛒'},{name:'Almoxarifado',icon:'🔧'},{name:'Administração',icon:'📋'},{name:'Manutenção',icon:'🛠️'},{name:'Projeto',icon:'📐'}];
  const insTeam=db.prepare('INSERT OR IGNORE INTO chat_teams(name,icon) VALUES(?,?)');
  defaultTeams.forEach(t=>insTeam.run(t.name,t.icon));
  // Todos os usuários existentes entram como membros das equipes padrão (admin ajusta depois)
