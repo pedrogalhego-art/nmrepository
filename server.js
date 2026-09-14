@@ -622,6 +622,54 @@ app.get("/api/backup/download",admin,(req,res)=>{
   }
 });
 
+function applyBackup(bck){
+  const tx=db.transaction(()=>{
+    // Limpa tudo (menos nao da pra dropar com FK, mas vamos DELETE)
+    db.prepare("DELETE FROM chat_messages").run();
+    db.prepare("DELETE FROM chat_participants").run();
+    db.prepare("DELETE FROM chat_conversations").run();
+    db.prepare("DELETE FROM chat_team_members").run();
+    db.prepare("DELETE FROM chat_teams").run();
+    db.prepare("DELETE FROM purchases").run();
+    db.prepare("DELETE FROM movements").run();
+    db.prepare("DELETE FROM products").run();
+    db.prepare("DELETE FROM users").run();
+    // Reinsere em ordem de FK
+    const insU=db.prepare("INSERT INTO users(id,username,password_hash,role,created_at) VALUES(?,?,?,?,?)");
+    (bck.users||[]).forEach(u=>insU.run(u.id,u.username,u.password_hash||(u.role==='admin'?bcrypt.hashSync(process.env.ADMIN_PASSWORD||'admin123',12):bcrypt.hashSync('projeto123',12)),u.role,u.created_at));
+    const insT=db.prepare("INSERT OR IGNORE INTO chat_teams(id,name,icon) VALUES(?,?,?)");
+    (bck.chat_teams||[]).forEach(t=>insT.run(t.id,t.name,t.icon));
+    const insP=db.prepare("INSERT INTO products(id,category,code,name,weight_6m,unit,stock) VALUES(?,?,?,?,?,?,?)");
+    (bck.products||[]).forEach(p=>insP.run(p.id,p.category,p.code,p.name,p.weight_6m,p.unit,p.stock));
+    const insM=db.prepare("INSERT INTO movements(id,product_id,user_id,type,quantity,note,created_at) VALUES(?,?,?,?,?,?,?)");
+    (bck.movements||[]).forEach(m=>insM.run(m.id,m.product_id,m.user_id,m.type,m.quantity,m.note,m.created_at));
+    const insPu=db.prepare("INSERT INTO purchases(id,material,quantity,supplier,status,created_by,created_at) VALUES(?,?,?,?,?,?,?)");
+    (bck.purchases||[]).forEach(p=>insPu.run(p.id,p.material,p.quantity,p.supplier,p.status,p.created_by,p.created_at));
+    const insTm=db.prepare("INSERT OR IGNORE INTO chat_team_members(team_id,user_id) VALUES(?,?)");
+    (bck.chat_team_members||[]).forEach(m=>insTm.run(m.team_id,m.user_id));
+    const insC=db.prepare("INSERT INTO chat_conversations(id,type,name,created_at) VALUES(?,?,?,?)");
+    (bck.chat_conversations||[]).forEach(c=>insC.run(c.id,c.type,c.name,c.created_at));
+    const insCp=db.prepare("INSERT OR IGNORE INTO chat_participants(conversation_id,user_id,last_read_at) VALUES(?,?,?)");
+    (bck.chat_participants||[]).forEach(p=>insCp.run(p.conversation_id,p.user_id,p.last_read_at||"now"));
+    const insCm=db.prepare("INSERT INTO chat_messages(id,conversation_id,user_id,content,created_at) VALUES(?,?,?,?,?)");
+    (bck.chat_messages||[]).forEach(m=>insCm.run(m.id,m.conversation_id,m.user_id,m.content,m.created_at));
+  });
+  tx();
+  exportDbJson();
+}
+
+app.post("/api/backup/restore",admin,(req,res)=>{
+  try{
+    const bck=req.body;
+    if(!bck || !Array.isArray(bck.products)) return res.status(400).json({error:"Backup inválido"});
+    applyBackup(bck);
+    res.json({ok:true,restored:bck.products.length+" produtos, "+(bck.movements||[]).length+" movimentações"});
+  }catch(e){
+    res.status(500).json({error:e.message});
+  }
+});
+
+
 app.get("*",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html")));
 io.on("connection",socket=>{
   socket.on("chat:join",({conversationId})=>{socket.join("chat:"+conversationId);});
