@@ -12,10 +12,10 @@ async function init(){
 async function refresh(){state.products=await api("/api/products");state.movements=await api("/api/movements");renderProducts();renderStats();renderCategories();renderMovements();buildTicker()}
 function renderCategories(){let c=[...new Set(state.products.map(p=>p.category))].sort();let sel=$("#category"),old=sel.value;sel.innerHTML='<option value="">Todas as categorias</option>'+c.map(x=>`<option>${x}</option>`).join("");sel.value=old}
 function filtered(){let q=$("#search").value.toLowerCase(),c=$("#category").value;return state.products.filter(p=>(!c||p.category===c)&&(!q||p.code.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)))}
-const MIN_STOCK=3, NEAR_STOCK=6;
+const MIN_STOCK=3, NEAR_STOCK=5;
 function stockStatus(p){
-  if(p.stock < MIN_STOCK) return {cls:"crit", label:"Estoque abaixo do mínimo"};
-  if(p.stock < NEAR_STOCK) return {cls:"near", label:"Perto do mínimo"};
+  if(p.stock < MIN_STOCK) return {cls:"crit", label:`Estoque abaixo do mínimo (${MIN_STOCK})`};
+  if(p.stock < NEAR_STOCK) return {cls:"near", label:`Estoque perto do mínimo (${MIN_STOCK})`};
   return {cls:"", label:""};
 }
 
