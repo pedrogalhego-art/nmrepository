@@ -110,8 +110,42 @@ const categoryUnit = cat => {
   if (c.includes("metalon")) return "barra";
   return "barra";
 };
+// Restaura backup se o banco estiver vazio (disco efêmero do Render)
+try{
+  const bck=JSON.parse(fs.readFileSync(BACKUP_FILE,"utf8"));
+  const userCount=db.prepare("SELECT COUNT(*) c FROM users").get().c;
+  const prodCount=db.prepare("SELECT COUNT(*) c FROM products").get().c;
+  if(userCount===0 && prodCount===0 && Array.isArray(bck.products) && bck.products.length>0){
+    console.log("[backup] Restaurando banco do backup de", bck.exported_at);
+    const insU=db.prepare("INSERT OR IGNORE INTO users(id,username,password_hash,role,created_at) VALUES(?,?,?,?,?)");
+    (bck.users||[]).forEach(u=>insU.run(u.id,u.username,u.password_hash,u.role,u.created_at));
+    const hashU=db.prepare("UPDATE users SET password_hash=(SELECT password_hash FROM users WHERE username='admin' LIMIT 1) WHERE username=?");
+    (bck.users||[]).forEach(u=>{ /* preserver senhas: re-insere com hash padrao? melhor: nao mexer */ });
+    const insP=db.prepare("INSERT OR IGNORE INTO products(id,category,code,name,weight_6m,unit,stock) VALUES(?,?,?,?,?,?,?)");
+    (bck.products||[]).forEach(p=>insP.run(p.id,p.category,p.code,p.name,p.weight_6m,p.unit,p.stock));
+    const insM=db.prepare("INSERT OR IGNORE INTO movements(id,product_id,user_id,type,quantity,note,created_at) VALUES(?,?,?,?,?,?,?)");
+    (bck.movements||[]).forEach(m=>insM.run(m.id,m.product_id,m.user_id,m.type,m.quantity,m.note,m.created_at));
+    const insPu=db.prepare("INSERT OR IGNORE INTO purchases(id,material,quantity,supplier,status,created_by,created_at) VALUES(?,?,?,?,?,?,?)");
+    (bck.purchases||[]).forEach(p=>insPu.run(p.id,p.material,p.quantity,p.supplier,p.status,p.created_by,p.created_at));
+    const insT=db.prepare("INSERT OR IGNORE INTO chat_teams(id,name,icon) VALUES(?,?,?)");
+    (bck.chat_teams||[]).forEach(t=>insT.run(t.id,t.name,t.icon));
+    const insTm=db.prepare("INSERT OR IGNORE INTO chat_team_members(team_id,user_id) VALUES(?,?)");
+    (bck.chat_team_members||[]).forEach(m=>insTm.run(m.team_id,m.user_id));
+    const insC=db.prepare("INSERT OR IGNORE INTO chat_conversations(id,type,name,created_at) VALUES(?,?,?,?)");
+    (bck.chat_conversations||[]).forEach(c=>insC.run(c.id,c.type,c.name,c.created_at));
+    const insCp=db.prepare("INSERT OR IGNORE INTO chat_participants(conversation_id,user_id,last_read_at) VALUES(?,?,?)");
+    (bck.chat_participants||[]).forEach(p=>insCp.run(p.conversation_id,p.user_id,p.last_read_at));
+    const insCm=db.prepare("INSERT OR IGNORE INTO chat_messages(id,conversation_id,user_id,content,created_at) VALUES(?,?,?,?,?)");
+    (bck.chat_messages||[]).forEach(m=>insCm.run(m.id,m.conversation_id,m.user_id,m.content,m.created_at));
+    console.log("[backup] Restaurado:",bck.products.length,"produtos,",(bck.movements||[]).length,"movimentações");
+  } else if (userCount>0){
+    // banco ja tem dados; nada a fazer
+  }
+}catch(e){ console.log("[backup] Sem backup para restaurar ou erro:",e.message); }
+
+
 const products=JSON.parse(fs.readFileSync(path.join(__dirname,"products.json"),"utf8"));
-const insertProduct=db.prepare(`INSERT OR IGNORE INTO products(category,code,name,weight_6m,unit) VALUES(?,?,?,?,?)`);
+const insertProduct=db.prepare(`INSERT INTO products(category,code,name,weight_6m,unit) VALUES(?,?,?,?,?) ON CONFLICT(category,code) DO UPDATE SET name=excluded.name, weight_6m=excluded.weight_6m, unit=excluded.unit`);
 const seedProducts=db.transaction(()=>{
   Object.entries(products).forEach(([cat,items])=>{
     const u = categoryUnit(cat);
@@ -120,6 +154,40 @@ const seedProducts=db.transaction(()=>{
   });
 });
 seedProducts();
+
+
+// ===== Backup automático do banco (persistência entre deploys do Render) =====
+// O disco do Render gratuito é efêmero: o estoque.db é zerado a cada deploy.
+// Solução: exporta o banco inteiro para um JSON versionado e restaura no boot.
+const BACKUP_FILE=path.join(__dirname,"db_backup.json");
+const BACKUP_EVERY_MS=Number(process.env.BACKUP_EVERY_MS)||10*60*1000; // 10 min
+function exportDbJson(){
+  try{
+    const dump={
+      exported_at:new Date().toISOString(),
+      users:db.prepare("SELECT id,username,password_hash,role,created_at FROM users").all(),
+      products:db.prepare("SELECT id,category,code,name,weight_6m,unit,stock FROM products").all(),
+      movements:db.prepare("SELECT id,product_id,user_id,type,quantity,note,created_at FROM movements").all(),
+      purchases:db.prepare("SELECT * FROM purchases").all(),
+      chat_teams:db.prepare("SELECT * FROM chat_teams").all(),
+      chat_team_members:db.prepare("SELECT * FROM chat_team_members").all(),
+      chat_conversations:db.prepare("SELECT * FROM chat_conversations").all(),
+      chat_participants:db.prepare("SELECT * FROM chat_participants").all(),
+      chat_messages:db.prepare("SELECT * FROM chat_messages").all(),
+    };
+    const tmp=BACKUP_FILE+".tmp";
+    fs.writeFileSync(tmp,JSON.stringify(dump,null,1));
+    fs.renameSync(tmp,BACKUP_FILE);
+    return true;
+  }catch(e){
+    console.error("Backup falhou:",e.message);
+    return false;
+  }
+}
+// Backup imediato e periódico
+try{exportDbJson()}catch(e){}
+setInterval(exportDbJson, BACKUP_EVERY_MS);
+
 
 const countUsers=db.prepare("SELECT COUNT(*) c FROM users").get().c;
 if(!countUsers){
@@ -306,7 +374,7 @@ app.post("/api/movement",admin,(req,res)=>{
    db.prepare("UPDATE products SET stock=stock+? WHERE id=?").run(delta,productId);
    db.prepare("INSERT INTO movements(product_id,user_id,type,quantity,note) VALUES(?,?,?,?,?)").run(productId,req.session.user.id,type,qty,String(note||"").slice(0,250));
  });
- try{tx(); const payload={...req.body,user:req.session.user.username}; io.emit("inventory:update",payload); res.json({ok:true});}
+ try{tx(); const payload={...req.body,user:req.session.user.username}; io.emit("inventory:update",payload); exportDbJson(); res.json({ok:true});}
  catch(e){res.status(400).json({error:e.message});}
 });
 
@@ -525,10 +593,33 @@ app.post("/api/chat/conversations/:id/messages",auth,(req,res)=>{
   io.to("chat:"+convId).emit("chat:message",msg);
   res.json(msg);
 });
+app.delete("/api/chat/messages/:msgId",auth,(req,res)=>{
+  const msgId=Number(req.params.msgId);
+  const msg=db.prepare("SELECT * FROM chat_messages WHERE id=?").get(msgId);
+  if(!msg) return res.status(404).json({error:"Mensagem não encontrada"});
+  const isAdmin=req.session.user.role==="admin";
+  const isOwner=msg.user_id===req.session.user.id;
+  if(!isAdmin && !isOwner) return res.status(403).json({error:"Sem permissão para apagar esta mensagem"});
+  db.prepare("DELETE FROM chat_messages WHERE id=?").run(msgId);
+  io.to("chat:"+msg.conversation_id).emit("chat:message-deleted",{id:msgId,conversation_id:msg.conversation_id});
+  res.json({ok:true});
+});
+
 app.post("/api/chat/conversations/:id/read",auth,(req,res)=>{
   const convId=Number(req.params.id),userId=req.session.user.id;
   db.prepare("UPDATE chat_participants SET last_read_at=datetime('now') WHERE conversation_id=? AND user_id=?").run(convId,userId);
   res.json({ok:true});
+});
+
+app.get("/api/backup/download",admin,(req,res)=>{
+  try{
+    const bck=JSON.parse(fs.readFileSync(BACKUP_FILE,"utf8"));
+    res.setHeader("Content-Type","application/json");
+    res.setHeader("Content-Disposition",'attachment; filename="db_backup.json"');
+    res.send(bck);
+  }catch(e){
+    res.status(404).json({error:"Backup ainda não gerado"});
+  }
 });
 
 app.get("*",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html")));
