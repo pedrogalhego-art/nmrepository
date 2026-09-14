@@ -16,4 +16,6 @@ ai_usage.json
 npm-debug.log*
 *.log
 check-ai.ts
-adm.txt
+adm.txttest_chat*.js
+cooks.txt
+public/estoque.html

@@ -43,6 +43,7 @@
     <button class="tab" data-tab="valores">Valores</button>
     <button class="tab" data-tab="ia">Hermes - Agent</button>
     <button class="tab" data-tab="kanban">Compras</button>
+    <button class="tab" data-tab="chat">Comunicação Interna</button>
     <button class="tab" data-tab="explicacao">Explicação</button>
   </nav>
 
@@ -141,6 +142,45 @@
         <div class="kanban-col" data-status="cancelado">
           <div class="kanban-head"><h3>Cancelado</h3><span class="kanban-count" id="count-cancelado">0</span></div>
           <div class="kanban-cards" id="col-cancelado"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-chat" class="hidden">
+    <div class="panel chat-panel">
+      <div class="panel-head"><div><h2>Comunicação Interna</h2><p class="muted">Converse com equipes e setores em tempo real</p></div><span class="live small-live"><i></i> Tempo real</span></div>
+      <div class="chat-layout">
+        <!-- Coluna esquerda: equipes + conversas -->
+        <div class="chat-sidebar">
+          <div class="chat-sidebar-section">
+            <div class="chat-sidebar-title">Equipes</div>
+            <div id="chatTeams" class="chat-teams"></div>
+          </div>
+          <div class="chat-sidebar-section">
+            <div class="chat-sidebar-title">Conversas</div>
+            <div id="chatConversations" class="chat-conv-list"></div>
+          </div>
+        </div>
+        <!-- Área central: conversa ativa -->
+        <div class="chat-main">
+          <div class="chat-main-empty" id="chatEmpty">
+            <div class="chat-empty-icon">💬</div>
+            <h3>Selecione uma conversa</h3>
+            <p class="muted">Escolha uma equipe ou conversa para começar a trocar mensagens.</p>
+          </div>
+          <div class="chat-main-active hidden" id="chatActive">
+            <div class="chat-header">
+              <span id="chatActiveName" class="chat-header-name"></span>
+              <span id="chatActiveStatus" class="chat-status offline"><i></i> offline</span>
+            </div>
+            <div id="chatMessages" class="chat-messages"></div>
+            <div id="chatTyping" class="chat-typing hidden"></div>
+            <form id="chatForm" class="chat-form">
+              <input id="chatInput" type="text" placeholder="Digite sua mensagem..." maxlength="2000" autocomplete="off">
+              <button class="primary" type="submit">Enviar</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

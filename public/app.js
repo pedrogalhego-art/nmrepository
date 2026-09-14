@@ -7,7 +7,7 @@ async function init(){
   $("#userName").textContent=state.user.username;$("#roleBadge").textContent=state.user.role==="admin"?"ADMINISTRADOR":"PROJETO";
   $("#permission").textContent=state.user.role==="admin"?"Você pode abastecer e dar baixa":"Visualização do estoque em tempo real";
   if(state.user.role!=="admin"){$("#roleBadge").style.background="rgba(111,199,154,0.15)";$("#roleBadge").style.borderColor="rgba(111,199,154,0.4)";}
-  await refresh(); buildTicker(); refreshKanban();
+  await refresh(); buildTicker(); refreshKanban(); refreshChat();
 }
 async function refresh(){state.products=await api("/api/products");state.movements=await api("/api/movements");renderProducts();renderStats();renderCategories();renderMovements();buildTicker()}
 function renderCategories(){let c=[...new Set(state.products.map(p=>p.category))].sort();let sel=$("#category"),old=sel.value;sel.innerHTML='<option value="">Todas as categorias</option>'+c.map(x=>`<option>${x}</option>`).join("");sel.value=old}
@@ -73,7 +73,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
   t.classList.add("active");
   const tab=t.dataset.tab;
-  ["estoque","regras","valores","ia","kanban","explicacao"].forEach(id=>{
+  ["estoque","regras","valores","ia","kanban","chat","explicacao"].forEach(id=>{
     $("#tab-"+id).classList.toggle("hidden",id!==tab);
   });
 });
@@ -252,3 +252,122 @@ $("#kanbanAdd").onclick=()=>{
 };
 
 init();
+
+
+// ---------- Chat Interno (Comunicação) ----------
+const chatState={teams:[],conversations:[],messages:[],activeConv:null,typingTimeout:null,online:{}};
+async function refreshChat(){
+  if(!state.user)return;
+  try{
+    const [teams,convs,users]=await Promise.all([
+      api("/api/chat/teams"),api("/api/chat/conversations"),api("/api/chat/users")
+    ]);
+    chatState.teams=teams;chatState.conversations=convs;chatState.users=users||[];
+    renderChatTeams();renderChatConversations();
+  }catch(e){}
+}
+function renderChatTeams(){
+  const el=$("#chatTeams");if(!el)return;
+  el.innerHTML=chatState.teams.map(t=>`<button class="chat-team" data-team-id="${t.id}" onclick="chatOpenTeam(${t.id},'${esc(t.name)}')"><span class="team-icon">${t.icon}</span> ${esc(t.name)}</button>`).join("");
+}
+function chatOpenTeam(teamId,name){
+  const conv=chatState.conversations.find(c=>c.name===name);
+  if(conv){chatOpenConversation(conv.id);return;}
+  // Cria conversa da equipe
+  api("/api/chat/conversations",{method:"POST",body:JSON.stringify({type:"team",name,team_id:teamId})})
+    .then(()=>refreshChat()).then(()=>{
+      const c=chatState.conversations.find(x=>x.name===name);
+      if(c)chatOpenConversation(c.id);
+    });
+}
+function chatOpenConversation(id){
+  chatState.activeConv=id;
+  document.querySelectorAll(".chat-conv").forEach(e=>e.classList.toggle("active",Number(e.dataset.convId)===id));
+  $("#chatEmpty").classList.add("hidden");$("#chatActive").classList.remove("hidden");
+  const conv=chatState.conversations.find(c=>c.id===id);
+  if(conv){$("#chatActiveName").textContent=conv.name;}
+  socket.emit("chat:join",{conversationId:id});
+  loadChatMessages(id);
+  markChatRead(id);
+}
+async function loadChatMessages(id){
+  try{
+    chatState.messages=await api(`/api/chat/conversations/${id}/messages?limit=100`);
+    renderChatMessages();
+  }catch(e){}
+}
+function renderChatMessages(){
+  const el=$("#chatMessages");if(!el)return;
+  el.innerHTML=chatState.messages.map(m=>{
+    const me=m.user_id===state.user.id;
+    return `<div class="chat-msg ${me?"me":"other"}">
+      <div class="chat-msg-head"><span class="chat-msg-author">${esc(m.username)}</span><span class="chat-msg-time">${fmtTime(m.created_at)}</span></div>
+      <div class="chat-msg-body">${esc(m.content)}</div>
+    </div>`;
+  }).join("");
+  el.scrollTop=el.scrollHeight;
+}
+function fmtTime(ts){
+  try{const d=new Date(String(ts).replace(" ","T")+"Z");return d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}catch(e){return ts||""}
+}
+function renderChatConversations(){
+  const el=$("#chatConversations");if(!el)return;
+  el.innerHTML=chatState.conversations.map(c=>{
+    const unread=c.unread_count>0;
+    return `<div class="chat-conv ${chatState.activeConv===c.id?"active":""}" data-conv-id="${c.id}" onclick="chatOpenConversation(${c.id})">
+      <div class="chat-conv-top"><span class="chat-conv-name">${esc(c.name)}</span>${c.last_message_at?`<span class="chat-conv-time">${fmtTime(c.last_message_at)}</span>`:""}</div>
+      <div class="chat-conv-preview">${c.last_sender?`${esc(c.last_sender)}: `:""}${esc(c.last_message||"Nova conversa")}</div>
+      ${unread?`<span class="chat-conv-unread">${c.unread_count}</span>`:""}
+    </div>`;
+  }).join("")||`<div class="muted chat-empty-list">Nenhuma conversa ainda. Clique numa equipe acima.</div>`;
+}
+async function markChatRead(id){
+  try{await api(`/api/chat/conversations/${id}/read`,{method:"POST"});
+    const c=chatState.conversations.find(x=>x.id===id);
+    if(c){c.unread_count=0;renderChatConversations();}
+  }catch(e){}
+}
+$("#chatForm").onsubmit=async e=>{
+  e.preventDefault();
+  const input=$("#chatInput");const text=input.value.trim();
+  if(!text||!chatState.activeConv)return;
+  input.value="";
+  try{
+    const msg=await api(`/api/chat/conversations/${chatState.activeConv}/messages`,{method:"POST",body:JSON.stringify({content:text})});
+    chatState.messages.push(msg);renderChatMessages();
+    refreshChat(); // atualiza preview
+  }catch(err){input.value=text;alert(err.message)}
+};
+$("#chatInput").oninput=()=>{
+  if(!chatState.activeConv)return;
+  socket.emit("chat:typing",{conversationId:chatState.activeConv,username:state.user.username});
+};
+socket.on("chat:message",msg=>{
+  if(!state.user)return;
+  if(chatState.activeConv===msg.conversation_id){
+    chatState.messages.push(msg);renderChatMessages();markChatRead(msg.conversation_id);
+  }else{
+    const c=chatState.conversations.find(x=>x.id===msg.conversation_id);
+    if(c){
+      c.unread_count=(c.unread_count||0)+1;c.last_message=msg.content;c.last_sender=msg.username;c.last_message_at=msg.created_at;
+      renderChatConversations();
+      playTone(880,0.1);setTimeout(()=>playTone(1174,0.15),110);
+    }
+  }
+  refreshChat();
+});
+socket.on("chat:typing",({conversationId,username})=>{
+  if(chatState.activeConv!==conversationId)return;
+  const el=$("#chatTyping");if(!el)return;
+  el.textContent=`${username} está digitando...`;el.classList.remove("hidden");
+  clearTimeout(chatState.typingTimeout);
+  chatState.typingTimeout=setTimeout(()=>{el.classList.add("hidden")},2500);
+});
+// Status online: heartbeat a cada 15s
+function chatHeartbeat(){
+  if(!state.user)return;
+  fetch("/api/me").then(r=>r.json()).then(d=>{
+    if(d.user){$("#chatActiveStatus")?.classList.remove("offline");$("#chatActiveStatus")?.classList.add("online");$("#chatActiveStatus").innerHTML="<i></i> online";}
+  }).catch(()=>{});
+}
+setInterval(chatHeartbeat,15000);

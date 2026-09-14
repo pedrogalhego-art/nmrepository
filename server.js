@@ -52,8 +52,49 @@ CREATE TABLE IF NOT EXISTS purchases(
  status TEXT NOT NULL DEFAULT 'solicitado' CHECK(status IN ('solicitado','aprovado','comprado','entregue','cancelado')),
  created_by TEXT NOT NULL,
  created_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-`);
+ );
+ CREATE TABLE IF NOT EXISTS chat_teams(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  icon TEXT DEFAULT '🏢'
+ );
+ CREATE TABLE IF NOT EXISTS chat_team_members(
+  team_id INTEGER REFERENCES chat_teams(id),
+  user_id INTEGER REFERENCES users(id),
+  PRIMARY KEY(team_id,user_id)
+ );
+ CREATE TABLE IF NOT EXISTS chat_conversations(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL DEFAULT 'team',
+  name TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+ );
+ CREATE TABLE IF NOT EXISTS chat_participants(
+  conversation_id INTEGER REFERENCES chat_conversations(id),
+  user_id INTEGER REFERENCES users(id),
+  last_read_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY(conversation_id,user_id)
+ );
+ CREATE TABLE IF NOT EXISTS chat_messages(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  conversation_id INTEGER REFERENCES chat_conversations(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id),
+  content TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+ );
+ `);
+ // Seed equipes padrão
+ const defaultTeams=[{name:'Produção',icon:'🏭'},{name:'Expedição',icon:'📦'},{name:'Compras',icon:'🛒'},{name:'Almoxarifado',icon:'🔧'},{name:'Administração',icon:'📋'},{name:'Manutenção',icon:'🛠️'}];
+ const insTeam=db.prepare('INSERT OR IGNORE INTO chat_teams(name,icon) VALUES(?,?)');
+ defaultTeams.forEach(t=>insTeam.run(t.name,t.icon));
+ // Todos os usuários existentes entram como membros das equipes padrão (admin ajusta depois)
+ const allUsers=db.prepare("SELECT id FROM users").all();
+ const addMember=db.prepare("INSERT OR IGNORE INTO chat_team_members(team_id,user_id) SELECT id,? FROM chat_teams");
+ allUsers.forEach(u=>addMember.run(u.id));
+// Sincroniza conversas de equipe: todos os usuários participam (projeto e admin conversam entre si)
+const teamConvs=db.prepare("SELECT c.id FROM chat_conversations c WHERE c.type='team'").all();
+const syncConv=db.prepare("INSERT OR IGNORE INTO chat_participants(conversation_id,user_id) SELECT ?,id FROM users");
+teamConvs.forEach(c=>syncConv.run(c.id));
 // Migração: garantir coluna unit em produtos (banco antigo não tem)
 const prodCols = db.prepare("PRAGMA table_info(products)").all().map(c => c.name);
 if (!prodCols.includes("unit")) {
@@ -369,8 +410,122 @@ app.get("/api/planilha-inteligente",auth,async(req,res)=>{
   res.setHeader("Content-Disposition",`attachment; filename="boletim-analitico-${hoje}.xlsx"`);
   res.send(buf);
 });
+// ===== Chat Interno API =====
+app.post("/api/chat/teams",admin,(req,res)=>{
+  const name=String(req.body?.name||"").trim();
+  const icon=String(req.body?.icon||"🏢").trim();
+  if(!name) return res.status(400).json({error:"Nome da equipe obrigatório"});
+  try{
+    const info=db.prepare("INSERT INTO chat_teams(name,icon) VALUES(?,?)").run(name,icon);
+    res.json({id:Number(info.lastInsertRowid),name,icon});
+  }catch(e){res.status(400).json({error:"Equipe já existe"})}
+});
+app.route("/api/chat/teams/:id/members")
+  .get(auth,(req,res)=>{
+    const teamId=Number(req.params.id);
+    const members=db.prepare(`SELECT u.id,u.username,u.role FROM users u JOIN chat_team_members m ON m.user_id=u.id WHERE m.team_id=? ORDER BY u.username`).all(teamId);
+    res.json(members);
+  })
+  .post(admin,(req,res)=>{
+    const teamId=Number(req.params.id);
+    const userId=Number(req.body?.userId);
+    if(!userId) return res.status(400).json({error:"userId obrigatório"});
+    db.prepare("INSERT OR IGNORE INTO chat_team_members(team_id,user_id) VALUES(?,?)").run(teamId,userId);
+    res.json({ok:true});
+  })
+  .delete(admin,(req,res)=>{
+    const teamId=Number(req.params.id);
+    const userId=Number(req.body?.userId);
+    db.prepare("DELETE FROM chat_team_members WHERE team_id=? AND user_id=?").run(teamId,userId);
+    res.json({ok:true});
+  });
+app.get("/api/chat/teams",auth,(req,res)=>{
+  const teams=db.prepare("SELECT * FROM chat_teams ORDER BY name").all();
+  res.json(teams);
+});
+app.get("/api/chat/users",auth,(req,res)=>{
+  const users=db.prepare("SELECT id,username,role FROM users ORDER BY username").all();
+  res.json(users);
+});
+app.get("/api/chat/conversations",auth,(req,res)=>{
+  const userId=req.session.user.id;
+  const convs=db.prepare(`
+    SELECT c.id,c.type,c.name,c.created_at,
+      (SELECT content FROM chat_messages WHERE conversation_id=c.id ORDER BY id DESC LIMIT 1) as last_message,
+      (SELECT u.username FROM chat_messages m2 JOIN users u ON u.id=m2.user_id WHERE m2.conversation_id=c.id ORDER BY m2.id DESC LIMIT 1) as last_sender,
+      (SELECT created_at FROM chat_messages WHERE conversation_id=c.id ORDER BY id DESC LIMIT 1) as last_message_at,
+      (SELECT COUNT(*) FROM chat_messages WHERE conversation_id=c.id AND user_id!=? AND created_at>COALESCE((SELECT last_read_at FROM chat_participants WHERE conversation_id=c.id AND user_id=?),'1970-01-01')) as unread_count
+    FROM chat_conversations c
+    INNER JOIN chat_participants cp ON cp.conversation_id=c.id AND cp.user_id=?
+    ORDER BY last_message_at DESC NULLS LAST
+  `).all(userId,userId,userId);
+  res.json(convs);
+});
+app.post("/api/chat/conversations",auth,(req,res)=>{
+  const {type,name,team_id,participant_ids}=req.body;
+  const userId=req.session.user.id;
+  const convType=type||"direct";
+  if(convType==="direct" && participant_ids && participant_ids.length===1){
+    const otherId=participant_ids[0];
+    if(otherId===userId) return res.status(400).json({error:"Nao pode criar conversa consigo mesmo"});
+    const existing=db.prepare(`SELECT c.id FROM chat_conversations c WHERE c.type='direct' AND EXISTS (SELECT 1 FROM chat_participants WHERE conversation_id=c.id AND user_id=?) AND EXISTS (SELECT 1 FROM chat_participants WHERE conversation_id=c.id AND user_id=?)`).get(userId,otherId);
+    if(existing) return res.json({id:existing.id,type:"direct"});
+  }
+  const info=db.prepare("INSERT INTO chat_conversations(type,name) VALUES(?,?)").run(convType,name||null);
+  const convId=Number(info.lastInsertRowid);
+  const addP=db.prepare("INSERT OR IGNORE INTO chat_participants(conversation_id,user_id) VALUES(?,?)");
+  addP.run(convId,userId);
+  if(convType==="team"){
+    db.prepare("INSERT OR IGNORE INTO chat_participants(conversation_id,user_id) SELECT ?,id FROM users").run(convId);
+  } else if(participant_ids){
+    participant_ids.forEach(pid=>addP.run(convId,pid));
+  }
+  const conv=db.prepare("SELECT * FROM chat_conversations WHERE id=?").get(convId);
+  res.json(conv);
+});
+app.get("/api/chat/conversations/:id/messages",auth,(req,res)=>{
+  const convId=Number(req.params.id),userId=req.session.user.id;
+  const participant=db.prepare("SELECT 1 FROM chat_participants WHERE conversation_id=? AND user_id=?").get(convId,userId);
+  if(!participant) return res.status(403).json({error:"Acesso negado"});
+  const limit=Math.min(Number(req.query.limit)||50,200);
+  const before=req.query.before;
+  let sql="SELECT m.id,m.conversation_id,m.user_id,m.content,m.created_at,u.username FROM chat_messages m JOIN users u ON u.id=m.user_id WHERE m.conversation_id=?";
+  const params=[convId];
+  if(before){sql+=" AND m.id<?";params.push(Number(before));}
+  sql+=" ORDER BY m.id DESC LIMIT ?";
+  params.push(limit);
+  const messages=db.prepare(sql).all(...params).reverse();
+  res.json(messages);
+});
+const chatRateLimit={}; // anti-spam: 1 msg a cada 600ms por usuário
+app.post("/api/chat/conversations/:id/messages",auth,(req,res)=>{
+  const convId=Number(req.params.id),userId=req.session.user.id;
+  const now=Date.now();
+  if(chatRateLimit[userId] && now-chatRateLimit[userId]<600) return res.status(429).json({error:"Aguarde um instante antes de enviar outra mensagem."});
+  chatRateLimit[userId]=now;
+  const raw=String(req.body?.content||"").trim();
+  if(!raw) return res.status(400).json({error:"Mensagem vazia"});
+  if(raw.length>2000) return res.status(400).json({error:"Mensagem muito longa"});
+  const participant=db.prepare("SELECT 1 FROM chat_participants WHERE conversation_id=? AND user_id=?").get(convId,userId);
+  if(!participant) return res.status(403).json({error:"Acesso negado"});
+  const safe=raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const info=db.prepare("INSERT INTO chat_messages(conversation_id,user_id,content) VALUES(?,?,?)").run(convId,userId,safe);
+  const msg=db.prepare("SELECT m.id,m.conversation_id,m.user_id,m.content,m.created_at,u.username FROM chat_messages m JOIN users u ON u.id=m.user_id WHERE m.id=?").get(Number(info.lastInsertRowid));
+  io.to("chat:"+convId).emit("chat:message",msg);
+  res.json(msg);
+});
+app.post("/api/chat/conversations/:id/read",auth,(req,res)=>{
+  const convId=Number(req.params.id),userId=req.session.user.id;
+  db.prepare("UPDATE chat_participants SET last_read_at=datetime('now') WHERE conversation_id=? AND user_id=?").run(convId,userId);
+  res.json({ok:true});
+});
+
 app.get("*",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html")));
-io.on("connection",socket=>{});
+io.on("connection",socket=>{
+  socket.on("chat:join",({conversationId})=>{socket.join("chat:"+conversationId);});
+  socket.on("chat:leave",({conversationId})=>{socket.leave("chat:"+conversationId);});
+  socket.on("chat:typing",({conversationId,username})=>{socket.to("chat:"+conversationId).emit("chat:typing",{conversationId,username});});
+});
 
 const PORT=process.env.PORT||3000;
 server.listen(PORT,()=>console.log(`Estoque rodando em http://localhost:${PORT}`));
