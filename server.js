@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS products(
  code TEXT NOT NULL,
  name TEXT NOT NULL,
  weight_6m REAL,
+ unit TEXT NOT NULL DEFAULT 'barra',
  stock INTEGER NOT NULL DEFAULT 0,
  UNIQUE(category,code)
 );
@@ -53,10 +54,30 @@ CREATE TABLE IF NOT EXISTS purchases(
  created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 `);
+// Migração: garantir coluna unit em produtos (banco antigo não tem)
+const prodCols = db.prepare("PRAGMA table_info(products)").all().map(c => c.name);
+if (!prodCols.includes("unit")) {
+  db.exec("ALTER TABLE products ADD COLUMN unit TEXT NOT NULL DEFAULT 'barra'");
+}
 
+const categoryUnit = cat => {
+  const c = String(cat).toLowerCase();
+  if (c.includes("chapa")) return "chapa";
+  if (c.includes("tubo")) return "tubo";
+  if (c.includes("cantoneira")) return "cantoneira";
+  if (c.includes("viga")) return "viga";
+  if (c.includes("metalon")) return "barra";
+  return "barra";
+};
 const products=JSON.parse(fs.readFileSync(path.join(__dirname,"products.json"),"utf8"));
-const insertProduct=db.prepare(`INSERT OR IGNORE INTO products(category,code,name,weight_6m) VALUES(?,?,?,?)`);
-const seedProducts=db.transaction(()=>Object.entries(products).forEach(([cat,items])=>items.forEach(p=>insertProduct.run(cat,p.code,p.name,p.weight_6m))));
+const insertProduct=db.prepare(`INSERT OR IGNORE INTO products(category,code,name,weight_6m,unit) VALUES(?,?,?,?,?)`);
+const seedProducts=db.transaction(()=>{
+  Object.entries(products).forEach(([cat,items])=>{
+    const u = categoryUnit(cat);
+    items.forEach(p=>insertProduct.run(cat,p.code,p.name,p.weight_6m,u));
+    db.prepare("UPDATE products SET unit=? WHERE category=?").run(u, cat);
+  });
+});
 seedProducts();
 
 const countUsers=db.prepare("SELECT COUNT(*) c FROM users").get().c;
@@ -276,7 +297,7 @@ const xlsx=require("xlsx");
 // ===== Planilha Excel do dia (download) =====
 function buildExcelBuffer(prods,movs,analysisSheet){
   const ws1=xlsx.utils.json_to_sheet(prods.map(p=>({
-    Categoria:p.category,Codigo:p.code,Descricao:p.name,"Peso barra (kg)":p.weight_6m??"",Estoque:p.stock,"Peso total (kg)":((p.stock*(p.weight_6m||0))||0).toFixed(2)
+    Categoria:p.category,Codigo:p.code,Descricao:p.name,"Peso unitario (kg)":p.weight_6m??"",Estoque:p.stock,"Peso total (kg)":((p.stock*(p.weight_6m||0))||0).toFixed(2)
   })));
   const ws2=xlsx.utils.json_to_sheet(movs.map(m=>({
     Data:m.created_at,Categoria:m.category,Codigo:m.code,Material:m.name,Tipo:m.type==="abastecimento"?"Entrada":"Saida",Quantidade:m.quantity,Usuario:m.username,Obs:m.note||""

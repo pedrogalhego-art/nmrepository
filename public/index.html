@@ -156,7 +156,7 @@
           <h3>Como funciona (de cabo a rabo)</h3>
           <ul>
             <li><strong>Login:</strong> cada usuário acessa com usuário e senha. Existem dois perfis: <em>Administrador</em> (pode abastecer e dar baixa) e <em>Projeto</em> (visualização somente leitura).</li>
-            <li><strong>Estoque:</strong> a tabela mostra categoria, código, descrição, peso por barra, estoque atual e peso total. A busca e o filtro por categoria ajudam a localizar materiais.</li>
+            <li><strong>Estoque:</strong> a tabela mostra categoria, código, descrição, peso unitário, estoque atual e peso total. A busca e o filtro por categoria ajudam a localizar materiais.</li>
             <li><strong>Movimentações:</strong> abastecimentos (entradas) e baixas (saídas) são registrados com usuário, data, quantidade e observação. Tudo aparece no histórico e dispara sons de notificação.</li>
             <li><strong>Tempo real:</strong> via Socket.IO, toda alteração de estoque aparece instantaneamente para todos os conectados, inclusive no ticker do topo.</li>
             <li><strong>Ticker:</strong> a faixa no topo mostra as últimas entradas e saídas ("ENTROU +X" e "BAIXA −X").</li>
@@ -216,7 +216,7 @@
 
 <div id="modal" class="modal hidden"><div class="modal-card"><button class="close" id="close">×</button><p class="eyebrow" id="modalType">MOVIMENTAÇÃO</p><h2 id="modalTitle"></h2><p id="modalInfo" class="muted"></p>
 <form id="moveForm"><input type="hidden" id="productId"><input type="hidden" id="moveType">
-<label>Quantidade de barras<input id="quantity" type="number" min="1" step="1" required></label>
+<label>Quantidade <span id="quantityUnit">de barras</span><input id="quantity" type="number" min="1" step="1" required></label>
 <label>Observação <span class="muted">(opcional)</span><input id="note" maxlength="250" placeholder="Ex.: recebimento NF 12345"></label>
 <button class="primary" type="submit" id="moveBtn"></button><div id="moveError" class="error"></div></form></div></div>
 <script src="/socket.io/socket.io.js"></script><script src="/app.js"></script>
