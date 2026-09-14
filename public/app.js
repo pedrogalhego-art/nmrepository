@@ -12,10 +12,33 @@ async function init(){
 async function refresh(){state.products=await api("/api/products");state.movements=await api("/api/movements");renderProducts();renderStats();renderCategories();renderMovements();buildTicker()}
 function renderCategories(){let c=[...new Set(state.products.map(p=>p.category))].sort();let sel=$("#category"),old=sel.value;sel.innerHTML='<option value="">Todas as categorias</option>'+c.map(x=>`<option>${x}</option>`).join("");sel.value=old}
 function filtered(){let q=$("#search").value.toLowerCase(),c=$("#category").value;return state.products.filter(p=>(!c||p.category===c)&&(!q||p.code.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)))}
+const MIN_STOCK=3, NEAR_STOCK=6;
+function stockStatus(p){
+  if(p.stock < MIN_STOCK) return {cls:"crit", label:"Estoque abaixo do mínimo"};
+  if(p.stock < NEAR_STOCK) return {cls:"near", label:"Perto do mínimo"};
+  return {cls:"", label:""};
+}
+
+function renderStockAlert(){
+  const crit = state.products.filter(p=>p.stock < MIN_STOCK);
+  const near = state.products.filter(p=>p.stock >= MIN_STOCK && p.stock < NEAR_STOCK);
+  const el = $("#stockAlert");
+  if(!el) return;
+  if(!crit.length && !near.length){ el.classList.add("hidden"); el.innerHTML=""; return; }
+  let parts = [];
+  if(crit.length) parts.push(`<div class="alert-row crit"><b>${crit.length} item(ns) ABAIXO do mínimo (${MIN_STOCK}):</b> ${crit.slice(0,6).map(p=>`${esc(p.name)} (${p.stock})`).join(", ")}${crit.length>6?"...":""}. <span class="alert-cta">Reabasteça!</span></div>`);
+  if(near.length) parts.push(`<div class="alert-row near"><b>${near.length} item(ns) perto do mínimo:</b> ${near.slice(0,6).map(p=>`${esc(p.name)} (${p.stock})`).join(", ")}${near.length>6?"...":""}.</div>`);
+  el.classList.remove("hidden");
+  el.innerHTML = parts.join("");
+}
+
 function renderProducts(){
  let rows=filtered(); $("#products").innerHTML=rows.map(p=>{let total=(p.stock*(p.weight_6m||0)).toFixed(2).replace(".",",");
+ let st=stockStatus(p);
+ let badge=st.cls?` <span class="stock-badge ${st.cls}">${st.label}</span>`:"";
  let actions=state.user.role==="admin"?`<div class="action"><button class="in" onclick="openMove(${p.id},'abastecimento')">+ Abastecer</button><button class="out" onclick="openMove(${p.id},'baixa')">− Baixar</button></div>`:`<span class="mini">Somente leitura</span>`;
- return `<tr><td><span class="cat-badge">${esc(p.category)}</span></td><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${p.weight_6m?p.weight_6m.toFixed(2).replace(".",",")+" kg":"—"}</td><td class="stock ${p.stock===0?"zero":""}">${p.stock}</td><td>${total} kg</td><td>${actions}</td></tr>`}).join("")||`<tr><td colspan="7" class="muted">Nenhum material encontrado.</td></tr>`;
+ return `<tr><td><span class="cat-badge">${esc(p.category)}</span></td><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${p.weight_6m?p.weight_6m.toFixed(2).replace(".",",")+" kg":"—"}</td><td class="stock ${st.cls} ${p.stock===0?"zero":""}">${p.stock}</td><td>${total} kg${badge}</td><td>${actions}</td></tr>`}).join("")||`<tr><td colspan="7" class="muted">Nenhum material encontrado.</td></tr>`;
+ renderStockAlert();
 }
 function renderStats(){let total=state.products.reduce((a,p)=>a+p.stock,0),kg=state.products.reduce((a,p)=>a+p.stock*(p.weight_6m||0),0),cats=new Set(state.products.map(p=>p.category)).size,zero=state.products.filter(p=>p.stock===0).length;
 $("#stats").innerHTML=[["Peças em estoque",total],["Peso estimado",kg.toLocaleString("pt-BR",{maximumFractionDigits:2})+" kg"],["Categorias",cats],["Itens zerados",zero]].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong></div>`).join("")}

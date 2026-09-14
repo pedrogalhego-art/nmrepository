@@ -424,6 +424,26 @@ tr:hover td { background: #f8fbfa; }
 .stock { font-weight: 800; font-size: 13px; }
 .stock.zero { color: var(--danger); }
 .stock:not(.zero) { color: var(--accent-2); }
+.stock.crit { color: var(--danger); }
+.stock.near { color: #c98a2d; }
+.stock-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+}
+.stock-badge.crit { background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(196,82,82,.35); }
+.stock-badge.near { background: #fdf3e0; color: #9a6a1f; border: 1px solid rgba(201,138,45,.35); }
+.stock-alert { padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 12px; font-size: 12.5px; display: flex; flex-direction: column; gap: 6px; }
+.stock-alert .alert-row { padding: 8px 12px; border-radius: 8px; line-height: 1.45; }
+.stock-alert .alert-row.crit { background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(196,82,82,.3); }
+.stock-alert .alert-row.near { background: #fdf3e0; color: #9a6a1f; border: 1px solid rgba(201,138,45,.3); }
+.stock-alert .alert-cta { font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: .4px; }
 
 .mini { font-size: 10px; color: var(--muted); }
 
