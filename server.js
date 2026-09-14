@@ -134,6 +134,9 @@ res.json(rows);
 const AI_BASE=process.env.AI_BASE_URL||"https://rl2jbv2.abc-tunnel.us/v1";
 const AI_KEY=process.env.AI_API_KEY;
 const AI_MODEL=process.env.AI_MODEL||"free-first";
+const AIML_KEY=process.env.AIMLAPI_KEY;               // AIMLAPI (fallback)
+const AIML_BASE=process.env.AIMLAPI_BASE||"https://api.aimlapi.com/v1";
+const AIML_MODEL=process.env.AIMLAPI_MODEL||"openai/gpt-4o";
 const AI_DAILY_LIMIT=Number(process.env.AI_DAILY_LIMIT)||30000;
 
 // Controle de uso diário (por IP) — tabela simples em memória + arquivo
@@ -163,7 +166,22 @@ async function askAi(messages){
       if(content) return content;
     }
   }catch(e){/* cai para fallback */}
-  // Fallback: OpenRouter gratuito (modelos free, sem chave)
+  // Fallback 2: AIMLAPI (1000+ modelos, usa chave se configurada)
+  if(AIML_KEY){
+    try{
+      const res=await fetch(`${AIML_BASE}/chat/completions`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json",Authorization:`Bearer ${AIML_KEY}`},
+        body:JSON.stringify({model:AIML_MODEL,messages,max_tokens:600,temperature:0.6})
+      });
+      if(res.ok){
+        const data=await res.json();
+        const content=(data.choices?.[0]?.message?.content||"").trim();
+        if(content) return content;
+      }
+    }catch(e){/* cai para OpenRouter */}
+  }
+  // Fallback 3: OpenRouter gratuito (modelos free, sem chave)
   try{
     const res=await fetch("https://openrouter.ai/api/v1/chat/completions",{
       method:"POST",

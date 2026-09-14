@@ -6,23 +6,23 @@
 * { box-sizing: border-box; }
 
 :root {
-  --bg: #f4f6f8;
-  --surface: #ffffff;
-  --border: #e3e8ed;
-  --border-soft: #edf1f4;
-  --text: #1c2733;
-  --muted: #75838f;
-  --dark: #16232e;
-  --dark-2: #1e2e3c;
-  --accent: #147d64;
-  --accent-2: #0e5d4b;
-  --accent-soft: #e4f2ed;
-  --danger: #c45252;
-  --danger-soft: #fbeeea;
-  --ok: #2e8b57;
-  --ok-soft: #e6f4ec;
-  --shadow: 0 2px 6px rgba(22, 35, 46, 0.06), 0 10px 30px rgba(22, 35, 46, 0.05);
-  --shadow-lg: 0 4px 14px rgba(22, 35, 46, 0.10), 0 24px 60px rgba(22, 35, 46, 0.12);
+  --bg: #0F1114;
+  --surface: #14161A;
+  --border: #2A2E35;
+  --border-soft: #1E2228;
+  --text: #E8EAED;
+  --muted: #8A919C;
+  --dark: #0C0E11;
+  --dark-2: #1A1D22;
+  --accent: #22997A;
+  --accent-2: #1B7A62;
+  --accent-soft: #16281F;
+  --danger: #E07070;
+  --danger-soft: #2E1B1B;
+  --ok: #4CAF7D;
+  --ok-soft: #162A1F;
+  --shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 4px 14px rgba(0, 0, 0, 0.5), 0 24px 60px rgba(0, 0, 0, 0.45);
   --radius: 12px;
   --radius-sm: 8px;
 }
@@ -247,7 +247,7 @@ header {
   border-radius: var(--radius-sm);
   padding: 11px 13px;
   outline: none;
-  background: #fff;
+  background: var(--surface);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -441,8 +441,8 @@ tr:hover td { background: #f8fbfa; }
 
 .action { display: flex; gap: 6px; }
 .action button {
-  border: 1px solid #d7dee2;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   border-radius: 7px;
   padding: 6px 9px;
   font-size: 10.5px;
@@ -711,7 +711,7 @@ body.gray-theme .down { color: #d17f7f; }
 }
 .ai-msg { max-width: 85%; padding: 10px 13px; border-radius: 10px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
 .ai-msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 3px; }
-.ai-msg.bot { align-self: flex-start; background: #fff; border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+.ai-msg.bot { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
 .ai-msg.bot.error { border-color: var(--danger); color: var(--danger); }
 .ai-inputs { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
 .ai-sheet {
@@ -767,7 +767,7 @@ body.gray-theme .down { color: #d17f7f; }
 }
 .kanban-cards { display: flex; flex-direction: column; gap: 8px; }
 .kanban-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px;
@@ -779,7 +779,7 @@ body.gray-theme .down { color: #d17f7f; }
 .k-actions { display: flex; gap: 5px; margin-top: 8px; }
 .k-btn {
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--surface);
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 11px;
