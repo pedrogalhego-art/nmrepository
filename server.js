@@ -310,6 +310,17 @@ app.post("/api/movement",admin,(req,res)=>{
  catch(e){res.status(400).json({error:e.message});}
 });
 
+app.post("/api/users",admin,(req,res)=>{
+  const username=String(req.body?.username||"").trim();
+  const password=String(req.body?.password||"");
+  const role=String(req.body?.role||"projeto");
+  if(!username||password.length<6) return res.status(400).json({error:"Usuário e senha (mín. 6) são obrigatórios"});
+  if(!["admin","projeto"].includes(role)) return res.status(400).json({error:"Role inválido"});
+  try{
+    const info=db.prepare("INSERT INTO users(username,password_hash,role) VALUES(?,?,?)").run(username,bcrypt.hashSync(password,12),role);
+    res.json({id:Number(info.lastInsertRowid),username,role});
+  }catch(e){res.status(400).json({error:"Usuário já existe"})}
+});
 app.post("/api/users/password",auth,(req,res)=>{
  const {currentPassword,newPassword}=req.body;
  if(!newPassword || String(newPassword).length<8) return res.status(400).json({error:"A nova senha deve ter pelo menos 8 caracteres."});
